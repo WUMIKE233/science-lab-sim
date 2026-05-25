@@ -1,14 +1,18 @@
 # 理科实验可视化仿真 / Science Lab Sim
 
-面向初高中课堂与自学场景的理科实验可视化仿真 Web 应用。首版覆盖物理、化学、生物 6 个入门实验，支持参数调节、实时读数与可视化演示。
+面向初高中课堂与自学场景的理科实验可视化仿真 Web 应用。当前版本覆盖物理、化学、生物 12 个入门实验，支持参数调节、实时读数与可视化演示。
 
-A browser-based science simulation app for middle and high school learning. The first version includes six introductory physics, chemistry, and biology experiments with adjustable parameters, live readings, and visual demonstrations.
+A browser-based science simulation app for middle and high school learning. The current version includes twelve introductory physics, chemistry, and biology experiments with adjustable parameters, live readings, and visual demonstrations.
 
 ## 实验列表 / Experiments
 
-- 物理 / Physics: 单摆周期、欧姆定律、凸透镜成像
-- 化学 / Chemistry: 酸碱中和滴定、反应速率
-- 生物 / Biology: 显微镜细胞观察
+- 物理 / Physics: 单摆周期、欧姆定律、抛体运动、浮力与密度、凸透镜成像
+- 化学 / Chemistry: 酸碱中和滴定、反应速率、气体状态方程、纸层析分离
+- 生物 / Biology: 显微镜细胞观察、光合作用速率、孟德尔遗传方格
+
+- Physics: pendulum period, Ohm's law, projectile motion, buoyancy and density, convex lens imaging
+- Chemistry: acid-base titration, reaction rate, ideal gas law, paper chromatography
+- Biology: microscope cell observation, photosynthesis rate, Mendelian Punnett square
 
 ## 技术栈 / Tech Stack
 
