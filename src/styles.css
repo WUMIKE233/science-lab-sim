@@ -51,6 +51,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  max-height: 100vh;
+  overflow-y: auto;
   padding: 24px;
   background: #21302f;
   color: #f7f7ee;
@@ -556,6 +558,148 @@ input[type="range"] {
   stroke-width: 62;
 }
 
+.trajectory,
+.launch-vector {
+  fill: none;
+  stroke: #b08d45;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.projectile {
+  fill: #b95747;
+  stroke: #1f2b2a;
+  stroke-width: 3;
+}
+
+.tank,
+.cylinder,
+.beaker {
+  fill: rgba(255, 255, 255, 0.54);
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.fluid,
+.solvent {
+  opacity: 0.72;
+}
+
+.surface-wave,
+.baseline,
+.solvent-front {
+  stroke: #394946;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 6 7;
+}
+
+.floating-block {
+  fill: #b08d45;
+  stroke: #1f2b2a;
+  stroke-width: 3;
+}
+
+.force {
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.force.up {
+  stroke: #427aa1;
+}
+
+.force.down {
+  stroke: #b95747;
+}
+
+.piston,
+.weight {
+  fill: #ece2cb;
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.gas-dot {
+  fill: #427aa1;
+  opacity: 0.78;
+}
+
+.gas-dot.hot {
+  fill: #b95747;
+}
+
+.thermometer {
+  fill: none;
+  stroke: #394946;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.thermo-bulb,
+.thermo-fill {
+  fill: #b95747;
+}
+
+.paper-strip {
+  fill: #fffdf4;
+  stroke: #c9d1c9;
+  stroke-width: 3;
+}
+
+.chromato-spot {
+  opacity: 0.84;
+}
+
+.sun {
+  fill: #e9c46a;
+  stroke: #b08d45;
+  stroke-width: 4;
+}
+
+.leaf {
+  fill: rgba(83, 125, 93, 0.42);
+  stroke: #537d5d;
+  stroke-width: 4;
+}
+
+.leaf-vein {
+  fill: none;
+  stroke: #537d5d;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.oxygen-bubble {
+  fill: rgba(66, 122, 161, 0.2);
+  stroke: #427aa1;
+  stroke-width: 2;
+}
+
+.punnett-head {
+  fill: #ece2cb;
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.punnett-cell {
+  fill: rgba(83, 125, 93, 0.24);
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.punnett-cell.recessive {
+  fill: rgba(185, 87, 71, 0.2);
+}
+
+.punnett-text {
+  fill: #1f2b2a;
+  font-size: 24px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
 @media (max-width: 1120px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -565,6 +709,8 @@ input[type="range"] {
     position: sticky;
     top: 0;
     z-index: 5;
+    max-height: none;
+    overflow-y: visible;
     padding: 16px;
   }
 
