@@ -32,7 +32,9 @@ function PendulumVisual({ params, time }: VisualProps) {
   const period = 2 * Math.PI * Math.sqrt(length / gravity);
   const theta = (angle * Math.PI) / 180 * Math.cos((2 * Math.PI * time) / period);
   const pivot = { x: 220, y: 54 };
-  const lineLength = 210 + length * 70;
+  const normalizedLength = clamp((length - 0.4) / 2, 0, 1);
+  const lineLength = 152 + normalizedLength * 92;
+  const referenceEndY = pivot.y + lineLength + 24;
   const bob = {
     x: pivot.x + Math.sin(theta) * lineLength,
     y: pivot.y + Math.cos(theta) * lineLength,
@@ -49,7 +51,7 @@ function PendulumVisual({ params, time }: VisualProps) {
     <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="单摆运动仿真">
       <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
       <line className="stand" x1="78" y1="54" x2="362" y2="54" />
-      <line className="stand" x1="220" y1="54" x2="220" y2="318" strokeDasharray="5 7" />
+      <line className="stand" x1="220" y1="54" x2="220" y2={referenceEndY} strokeDasharray="5 7" />
       {showTrace && <polyline className="trace" points={trace} />}
       <line className="ray strong" x1={pivot.x} y1={pivot.y} x2={bob.x} y2={bob.y} />
       <circle className="pivot" cx={pivot.x} cy={pivot.y} r="8" />
