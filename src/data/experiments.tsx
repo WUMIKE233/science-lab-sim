@@ -66,21 +66,51 @@ function OhmVisual({ params, result }: VisualProps) {
   const resistance = asNumber(params, "resistance");
   const maxCurrent = 12 / resistance;
   const points = Array.from({ length: 13 }, (_, v) => ({ x: v, y: v / resistance }));
-  const activeX = 52 + (voltage / 12) * 296;
-  const activeY = 278 - ((voltage / resistance) / Math.max(maxCurrent, 0.1)) * 196;
+  const chartLeft = 62;
+  const chartBottom = 304;
+  const chartWidth = 296;
+  const chartHeight = 68;
+  const activeX = chartLeft + (voltage / 12) * chartWidth;
+  const activeY = chartBottom - (voltage / 12) * chartHeight;
+  const ivPath = points
+    .map((point, index) => {
+      const x = chartLeft + (point.x / 12) * chartWidth;
+      const y = chartBottom - (point.y / Math.max(maxCurrent, 0.1)) * chartHeight;
+      return `${index === 0 ? "M" : "L"} ${round(x, 1)} ${round(y, 1)}`;
+    })
+    .join(" ");
+  const current = voltage / resistance;
+  const sliderX = 214 + clamp((resistance - 4) / 36, 0, 1) * 80;
+  const glow = clamp(current / 1.4, 0.12, 1);
 
   return (
     <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="欧姆定律曲线">
       <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
-      <path className="wire" d="M80 86 H184 V126 H256 V86 H360 V212 H80 Z" />
-      <rect className="component" x="184" y="112" width="72" height="28" rx="4" />
-      <circle className="meter" cx="96" cy="212" r="26" />
-      <text className="meter-text" x="96" y="218">A</text>
-      <path className="axis" d="M52 278 H348 M52 278 V82" />
-      <path className="chart-line" d={curvePath(points, 344, 304, 52)} />
+      <path className="circuit-wire" d="M64 88 H356 V202 H64 Z" />
+      <rect className="battery-body" x="54" y="118" width="46" height="54" rx="6" />
+      <line className="battery-terminal" x1="76" y1="106" x2="76" y2="130" />
+      <line className="battery-terminal short" x1="76" y1="162" x2="76" y2="184" />
+      <text className="svg-label small" x="48" y="210">{voltage} V</text>
+
+      <rect className="resistor-track" x="202" y="74" width="114" height="38" rx="8" />
+      <path className="resistor-zigzag" d="M214 93 l10 -12 l10 24 l10 -24 l10 24 l10 -24 l10 24 l10 -24 l10 12" />
+      <line className="resistor-slider" x1={sliderX} y1="62" x2={sliderX - 22} y2="110" />
+      <circle className="active-dot" cx={sliderX} cy="62" r="7" />
+      <text className="svg-label small" x="204" y="136">R = {resistance} Ω</text>
+
+      <circle className="meter ammeter" cx="146" cy="202" r="32" />
+      <text className="meter-text" x="146" y="198">A</text>
+      <text className="meter-value" x="146" y="220">{round(current, 2)}</text>
+      <rect className="meter voltmeter" x="252" y="174" width="82" height="56" rx="10" />
+      <text className="meter-text" x="274" y="197">V</text>
+      <text className="meter-value left" x="298" y="197">{round(voltage, 1)}</text>
+      <circle className="bulb-glow" cx="356" cy="88" r={18 + glow * 10} opacity={0.2 + glow * 0.38} />
+      <circle className="bulb" cx="356" cy="88" r="18" />
+
+      <path className="axis ohm-axis" d="M62 304 H358 M62 304 V236" />
+      <path className="chart-line ohm-line" d={ivPath} />
       <circle className="active-dot" cx={activeX} cy={activeY} r="7" />
-      <text className="svg-label" x="272" y="126">{resistance} Ω</text>
-      <text className="svg-label" x="276" y="312">{result.readings[1].value}</text>
+      <text className="svg-label small" x="72" y="326">I-U 图：{result.readings[1].value}</text>
     </svg>
   );
 }
@@ -262,6 +292,17 @@ function ProjectileVisual({ params, time, result }: VisualProps) {
     };
   });
   const maxHeight = Math.max(...points.map((point) => point.y), 1);
+  const projectilePath = (pathPoints: Array<{ x: number; y: number }>) =>
+    pathPoints
+      .map((point, index) => {
+        const px = 48 + (point.x / Math.max(range, 1)) * 344;
+        const py = 292 - (point.y / maxHeight) * 210;
+        return `${index === 0 ? "M" : "L"} ${round(px, 1)} ${round(py, 1)}`;
+      })
+      .join(" ");
+  const progress = flightTime > 0 ? t / flightTime : 0;
+  const trailPoints = points.filter((_, index) => index / 43 <= progress);
+  const trail = trailPoints.length > 1 ? trailPoints : [points[0], { x, y: Math.max(y, 0) }];
   const ballX = 48 + (x / Math.max(range, 1)) * 344;
   const ballY = 292 - (Math.max(y, 0) / maxHeight) * 210;
 
@@ -269,7 +310,8 @@ function ProjectileVisual({ params, time, result }: VisualProps) {
     <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="抛体运动轨迹">
       <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
       <path className="axis" d="M48 292 H398 M48 292 V68" />
-      <path className="trajectory" d={curvePath(points, 392, 316, 48)} />
+      <path className="trajectory guide" d={projectilePath(points)} />
+      <path className="trajectory active-trail" d={projectilePath(trail)} />
       <line className="launch-vector" x1="48" y1="292" x2={48 + Math.cos(angle) * 72} y2={292 - Math.sin(angle) * 72} />
       <circle className="projectile" cx={ballX} cy={ballY} r="12" />
       <text className="svg-label" x="58" y="326">{result.readings[0].value}</text>
@@ -457,6 +499,176 @@ function GeneticsVisual({ params, result }: VisualProps) {
   );
 }
 
+function HookeVisual({ params, result }: VisualProps) {
+  const mass = asNumber(params, "mass");
+  const spring = asNumber(params, "spring");
+  const gravity = asNumber(params, "gravity");
+  const extension = (mass * gravity) / spring;
+  const visualExtension = clamp(extension * 180, 18, 140);
+  const topY = 58;
+  const bottomY = 112 + visualExtension;
+  const coils = Array.from({ length: 9 }, (_, index) => {
+    const y = topY + 18 + index * ((bottomY - topY - 36) / 8);
+    const x = index % 2 === 0 ? 190 : 250;
+    return `${x},${y}`;
+  }).join(" ");
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="胡克定律弹簧伸长">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <line className="stand" x1="96" y1="58" x2="344" y2="58" />
+      <line className="stand" x1="220" y1="58" x2="220" y2="76" />
+      <polyline className="spring-coil" points={`220,76 ${coils} 220,${bottomY}`} />
+      <rect className="mass-block" x="178" y={bottomY} width="84" height="58" rx="8" />
+      <line className="measurement-line" x1="310" y1="112" x2="310" y2={bottomY} />
+      <text className="svg-label" x="314" y={(112 + bottomY) / 2}>x</text>
+      <text className="svg-label" x="76" y="326">{result.readings[0].value}</text>
+      <text className="svg-label" x="268" y="326">{result.readings[1].value}</text>
+    </svg>
+  );
+}
+
+function SoundWaveVisual({ params, time, result }: VisualProps) {
+  const frequency = asNumber(params, "frequency");
+  const amplitude = asNumber(params, "amplitude");
+  const phase = asNumber(params, "phase");
+  const enabled = asBool(params, "secondWave");
+  const wavePoints = Array.from({ length: 96 }, (_, index) => {
+    const x = index / 95;
+    const first = Math.sin(x * Math.PI * 6 + time * frequency * 0.018);
+    const second = enabled ? Math.sin(x * Math.PI * 6 + time * frequency * 0.018 + (phase * Math.PI) / 180) : 0;
+    return { x: index, y: 1 + (amplitude / 100) * (first + second) * 0.48 };
+  });
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="声波叠加波形">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <circle className="speaker" cx="76" cy="176" r="30" />
+      <path className="speaker-cone" d="M86 158 L128 128 V224 L86 194 Z" />
+      <path className="axis" d="M132 176 H392" />
+      <path className="sound-wave" d={curvePath(wavePoints, 404, 292, 32)} />
+      <path className="sound-ring" d="M132 142 C160 164 160 188 132 210" />
+      <path className="sound-ring wide" d="M150 116 C196 154 196 198 150 236" />
+      <text className="svg-label" x="58" y="326">{frequency} Hz</text>
+      <text className="svg-label" x="274" y="326">{result.readings[0].value}</text>
+    </svg>
+  );
+}
+
+function ElectrolysisVisual({ params, result }: VisualProps) {
+  const voltage = asNumber(params, "voltage");
+  const time = asNumber(params, "time");
+  const concentration = asNumber(params, "concentration");
+  const intensity = clamp((voltage * concentration) / 24, 0.15, 1);
+  const bubbles = Array.from({ length: 22 }, (_, index) => ({
+    x: index % 2 === 0 ? 154 + (index % 4) * 8 : 276 + (index % 4) * 8,
+    y: 258 - ((index * 23 + time * 3) % 142),
+    r: 3 + (index % 3),
+  }));
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="电解水气体生成">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <rect className="electrolyzer" x="86" y="84" width="268" height="204" rx="10" />
+      <rect className="electrolyte" x="96" y="132" width="248" height="146" />
+      <line className="electrode cathode" x1="154" y1="94" x2="154" y2="266" />
+      <line className="electrode anode" x1="286" y1="94" x2="286" y2="266" />
+      <path className="wire" d="M154 94 V54 H286 V94" />
+      <rect className="battery-body" x="196" y="40" width="48" height="32" rx="6" />
+      {bubbles.map((bubble, index) => (
+        <circle key={index} className="oxygen-bubble" cx={bubble.x} cy={bubble.y} r={bubble.r} opacity={intensity} />
+      ))}
+      <text className="svg-label" x="124" y="314">H₂</text>
+      <text className="svg-label" x="286" y="314">O₂</text>
+      <text className="svg-label" x="58" y="326">{result.readings[0].value}</text>
+      <text className="svg-label" x="262" y="326">{result.readings[1].value}</text>
+    </svg>
+  );
+}
+
+function SolubilityVisual({ params, result }: VisualProps) {
+  const temperature = asNumber(params, "temperature");
+  const solute = asString(params, "solute");
+  const mass = asNumber(params, "mass");
+  const base = solute === "salt" ? 35 : 13;
+  const slope = solute === "salt" ? 0.08 : 0.86;
+  const soluble = base + slope * temperature;
+  const precipitate = clamp(mass - soluble, 0, 90);
+  const curve = Array.from({ length: 41 }, (_, index) => {
+    const temp = index * 2.5;
+    return { x: temp, y: base + slope * temp };
+  });
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="溶解度与结晶">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <rect className="beaker" x="58" y="88" width="142" height="204" rx="10" />
+      <rect className="solvent" x="68" y="142" width="122" height="140" />
+      {Array.from({ length: Math.ceil(precipitate / 8) }, (_, index) => (
+        <polygon key={index} className="crystal" points={`${86 + (index % 6) * 15},270 ${94 + (index % 6) * 15},258 ${102 + (index % 6) * 15},270 ${94 + (index % 6) * 15},280`} />
+      ))}
+      <path className="axis" d="M238 288 H392 M238 288 V88" />
+      <path className="chart-line" d={curvePath(curve, 408, 316, 36)} transform="translate(204, 0) scale(.46, .86)" />
+      <circle className="active-dot" cx={238 + (temperature / 100) * 154} cy={288 - (soluble / Math.max(...curve.map((point) => point.y))) * 170} r="7" />
+      <text className="svg-label" x="58" y="326">{result.readings[0].value}</text>
+      <text className="svg-label" x="260" y="326">{result.readings[1].value}</text>
+    </svg>
+  );
+}
+
+function EnzymeVisual({ params, result }: VisualProps) {
+  const temperature = asNumber(params, "temperature");
+  const ph = asNumber(params, "ph");
+  const substrate = asNumber(params, "substrate");
+  const rate = Number(result.readings[0].value.replace("%", ""));
+  const enzymeOpen = 34 - rate * 0.18;
+  const particles = Array.from({ length: 16 }, (_, index) => ({
+    x: 62 + ((index * 47 + substrate) % 312),
+    y: 80 + ((index * 31 + temperature) % 192),
+  }));
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="酶活性影响因素">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <path className="enzyme-body" d={`M166 178 C166 ${126 + enzymeOpen} 274 ${126 + enzymeOpen} 274 178 C274 ${228 - enzymeOpen} 166 ${228 - enzymeOpen} 166 178 Z`} />
+      <circle className="active-site" cx="220" cy="178" r="26" />
+      {particles.map((particle, index) => (
+        <circle key={index} className={index % 3 === 0 ? "substrate-dot hot" : "substrate-dot"} cx={particle.x} cy={particle.y} r="7" />
+      ))}
+      <path className="axis" d="M64 302 H376" />
+      <text className="svg-label" x="58" y="326">pH {ph}</text>
+      <text className="svg-label" x="180" y="326">{temperature} °C</text>
+      <text className="svg-label" x="298" y="326">{result.readings[0].value}</text>
+    </svg>
+  );
+}
+
+function PopulationVisual({ params, result }: VisualProps) {
+  const initial = asNumber(params, "initial");
+  const growth = asNumber(params, "growth");
+  const carrying = asNumber(params, "carrying");
+  const curve = Array.from({ length: 48 }, (_, index) => {
+    const t = index / 4;
+    const y = carrying / (1 + ((carrying - initial) / initial) * Math.exp(-growth * t));
+    return { x: index, y };
+  });
+  const finalPopulation = curve[curve.length - 1].y;
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="种群增长曲线">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <path className="axis" d="M64 292 H386 M64 292 V72" />
+      <line className="threshold" x1="64" y1="94" x2="386" y2="94" />
+      <path className="chart-line population-line" d={curvePath(curve, 410, 318, 38)} />
+      {Array.from({ length: 18 }, (_, index) => (
+        <circle key={index} className="population-dot" cx={82 + (index * 47) % 282} cy={240 - ((index * 29) % 118)} r={4 + (index % 3)} opacity={clamp(finalPopulation / carrying, 0.28, 1)} />
+      ))}
+      <text className="svg-label" x="70" y="326">{result.readings[0].value}</text>
+      <text className="svg-label" x="256" y="326">K = {carrying}</text>
+    </svg>
+  );
+}
+
 export const experiments: ExperimentModule[] = [
   {
     id: "pendulum",
@@ -587,6 +799,63 @@ export const experiments: ExperimentModule[] = [
       };
     },
     render: (props) => <BuoyancyVisual {...props} />,
+  },
+  {
+    id: "hooke",
+    title: "胡克定律",
+    subject: "物理",
+    summary: "调节质量、弹簧劲度系数和重力加速度，观察弹簧伸长量与弹力关系。",
+    defaults: { mass: 0.6, spring: 24, gravity: 9.8 },
+    controls: [
+      { type: "slider", key: "mass", label: "质量", unit: "kg", min: 0.1, max: 2, step: 0.1 },
+      { type: "slider", key: "spring", label: "劲度系数", unit: "N/m", min: 8, max: 60, step: 1 },
+      { type: "slider", key: "gravity", label: "重力加速度", unit: "m/s²", min: 1.6, max: 12, step: 0.1 },
+    ],
+    simulate: (params) => {
+      const mass = asNumber(params, "mass");
+      const spring = asNumber(params, "spring");
+      const gravity = asNumber(params, "gravity");
+      const force = mass * gravity;
+      const extension = force / spring;
+      return {
+        readings: [
+          { label: "弹力", value: `${round(force, 2)} N`, tone: "good" },
+          { label: "伸长量", value: `${round(extension * 100, 1)} cm` },
+          { label: "关系", value: "F = kx" },
+        ],
+        status: spring < 20 ? "弹簧较软，同样重量会带来更明显的伸长。" : "劲度系数越大，同样弹力下伸长量越小。",
+      };
+    },
+    render: (props) => <HookeVisual {...props} />,
+  },
+  {
+    id: "sound-wave",
+    title: "声波叠加",
+    subject: "物理",
+    summary: "调节频率、振幅与相位差，观察两列声波的叠加效果。",
+    defaults: { frequency: 440, amplitude: 55, phase: 0, secondWave: true },
+    controls: [
+      { type: "slider", key: "frequency", label: "频率", unit: "Hz", min: 120, max: 1000, step: 20 },
+      { type: "slider", key: "amplitude", label: "振幅", unit: "%", min: 10, max: 100, step: 1 },
+      { type: "slider", key: "phase", label: "相位差", unit: "°", min: 0, max: 180, step: 5 },
+      { type: "toggle", key: "secondWave", label: "第二列声波" },
+    ],
+    simulate: (params) => {
+      const frequency = asNumber(params, "frequency");
+      const amplitude = asNumber(params, "amplitude");
+      const phase = asNumber(params, "phase");
+      const enabled = asBool(params, "secondWave");
+      const combined = enabled ? amplitude * Math.abs(1 + Math.cos((phase * Math.PI) / 180)) : amplitude;
+      return {
+        readings: [
+          { label: "合成响度", value: `${round(clamp(combined, 0, 200), 0)}%`, tone: phase < 45 ? "good" : "info" },
+          { label: "波长趋势", value: frequency > 600 ? "较短" : "较长" },
+          { label: "相位差", value: `${phase}°` },
+        ],
+        status: enabled ? "相位接近时增强，相位差增大时叠加效果逐渐减弱。" : "只显示单列声波时，响度主要由振幅决定。",
+      };
+    },
+    render: (props) => <SoundWaveVisual {...props} />,
   },
   {
     id: "lens",
@@ -749,6 +1018,73 @@ export const experiments: ExperimentModule[] = [
     render: (props) => <ChromatographyVisual {...props} />,
   },
   {
+    id: "electrolysis",
+    title: "电解水",
+    subject: "化学",
+    summary: "调节电压、电解质浓度和时间，观察氢气与氧气按比例生成。",
+    defaults: { voltage: 6, concentration: 1, time: 20 },
+    controls: [
+      { type: "slider", key: "voltage", label: "电压", unit: "V", min: 1, max: 12, step: 0.5 },
+      { type: "slider", key: "concentration", label: "电解质浓度", unit: "mol/L", min: 0.2, max: 2, step: 0.1 },
+      { type: "slider", key: "time", label: "电解时间", unit: "min", min: 1, max: 60, step: 1 },
+    ],
+    simulate: (params) => {
+      const voltage = asNumber(params, "voltage");
+      const concentration = asNumber(params, "concentration");
+      const time = asNumber(params, "time");
+      const current = voltage * concentration * 0.12;
+      const hydrogen = current * time * 0.42;
+      const oxygen = hydrogen / 2;
+      return {
+        readings: [
+          { label: "氢气", value: `${round(hydrogen, 1)} mL`, tone: "good" },
+          { label: "氧气", value: `${round(oxygen, 1)} mL` },
+          { label: "体积比", value: "2 : 1" },
+        ],
+        status: "水电解生成氢气和氧气，理论体积比约为 2:1。",
+      };
+    },
+    render: (props) => <ElectrolysisVisual {...props} />,
+  },
+  {
+    id: "solubility",
+    title: "溶解度与结晶",
+    subject: "化学",
+    summary: "比较温度、溶质类型和加入质量对溶解与析晶状态的影响。",
+    defaults: { temperature: 40, solute: "nitrate", mass: 60 },
+    controls: [
+      { type: "slider", key: "temperature", label: "温度", unit: "°C", min: 0, max: 100, step: 1 },
+      {
+        type: "select",
+        key: "solute",
+        label: "溶质",
+        options: [
+          { label: "硝酸钾", value: "nitrate" },
+          { label: "食盐", value: "salt" },
+        ],
+      },
+      { type: "slider", key: "mass", label: "加入质量", unit: "g", min: 10, max: 120, step: 1 },
+    ],
+    simulate: (params) => {
+      const temperature = asNumber(params, "temperature");
+      const solute = asString(params, "solute");
+      const mass = asNumber(params, "mass");
+      const base = solute === "salt" ? 35 : 13;
+      const slope = solute === "salt" ? 0.08 : 0.86;
+      const soluble = base + slope * temperature;
+      const precipitate = Math.max(mass - soluble, 0);
+      return {
+        readings: [
+          { label: "溶解度", value: `${round(soluble, 1)} g`, tone: precipitate > 0 ? "warn" : "good" },
+          { label: "析出质量", value: `${round(precipitate, 1)} g` },
+          { label: "状态", value: precipitate > 0 ? "有晶体" : "全溶解" },
+        ],
+        status: solute === "salt" ? "食盐溶解度随温度变化较小。" : "硝酸钾溶解度随温度升高明显增加。",
+      };
+    },
+    render: (props) => <SolubilityVisual {...props} />,
+  },
+  {
     id: "microscope",
     title: "显微镜细胞观察",
     subject: "生物",
@@ -865,5 +1201,61 @@ export const experiments: ExperimentModule[] = [
       };
     },
     render: (props) => <GeneticsVisual {...props} />,
+  },
+  {
+    id: "enzyme",
+    title: "酶活性",
+    subject: "生物",
+    summary: "调节温度、pH 和底物浓度，观察酶促反应速率如何变化。",
+    defaults: { temperature: 37, ph: 7, substrate: 70 },
+    controls: [
+      { type: "slider", key: "temperature", label: "温度", unit: "°C", min: 0, max: 70, step: 1 },
+      { type: "slider", key: "ph", label: "pH", min: 2, max: 12, step: 0.1 },
+      { type: "slider", key: "substrate", label: "底物浓度", unit: "%", min: 10, max: 100, step: 1 },
+    ],
+    simulate: (params) => {
+      const temperature = asNumber(params, "temperature");
+      const ph = asNumber(params, "ph");
+      const substrate = asNumber(params, "substrate");
+      const tempFactor = Math.exp(-Math.pow((temperature - 37) / 18, 2));
+      const phFactor = Math.exp(-Math.pow((ph - 7) / 2.2, 2));
+      const rate = clamp(substrate * tempFactor * phFactor, 0, 100);
+      return {
+        readings: [
+          { label: "反应速率", value: `${round(rate, 0)}%`, tone: rate > 55 ? "good" : "warn" },
+          { label: "最适 pH", value: "约 7" },
+          { label: "温度影响", value: temperature > 55 ? "可能失活" : "可逆变化" },
+        ],
+        status: "酶活性通常在适宜温度和 pH 附近最高，偏离后速率会下降。",
+      };
+    },
+    render: (props) => <EnzymeVisual {...props} />,
+  },
+  {
+    id: "population",
+    title: "种群增长",
+    subject: "生物",
+    summary: "调节初始数量、增长率和环境容纳量，观察 S 型增长曲线。",
+    defaults: { initial: 24, growth: 0.42, carrying: 360 },
+    controls: [
+      { type: "slider", key: "initial", label: "初始数量", unit: "个", min: 10, max: 100, step: 5 },
+      { type: "slider", key: "growth", label: "增长率", unit: "1/年", min: 0.1, max: 0.9, step: 0.05 },
+      { type: "slider", key: "carrying", label: "环境容纳量", unit: "个", min: 120, max: 600, step: 20 },
+    ],
+    simulate: (params) => {
+      const initial = asNumber(params, "initial");
+      const growth = asNumber(params, "growth");
+      const carrying = asNumber(params, "carrying");
+      const finalPopulation = carrying / (1 + ((carrying - initial) / initial) * Math.exp(-growth * 12));
+      return {
+        readings: [
+          { label: "末期数量", value: `${round(finalPopulation, 0)} 个`, tone: finalPopulation > carrying * 0.85 ? "good" : "info" },
+          { label: "增长率", value: round(growth, 2) },
+          { label: "容纳量", value: `${carrying} 个` },
+        ],
+        status: finalPopulation > carrying * 0.85 ? "种群逐渐接近环境容纳量，增长速度会放缓。" : "资源仍较充足时，种群数量会继续较快增加。",
+      };
+    },
+    render: (props) => <PopulationVisual {...props} />,
   },
 ];

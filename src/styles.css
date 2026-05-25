@@ -585,11 +585,97 @@ input[type="range"] {
   font-weight: 700;
 }
 
+.svg-label.small {
+  font-size: 14px;
+}
+
 .component,
 .meter {
   fill: #ece2cb;
   stroke: #394946;
   stroke-width: 3;
+}
+
+.circuit-wire {
+  fill: none;
+  stroke: #394946;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.battery-body {
+  fill: #ece2cb;
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.battery-terminal {
+  stroke: #394946;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.battery-terminal.short {
+  stroke-width: 3;
+}
+
+.resistor-track {
+  fill: #fffdf4;
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.resistor-zigzag {
+  fill: none;
+  stroke: #b95747;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.resistor-slider {
+  stroke: #427aa1;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.ammeter {
+  fill: #ece2cb;
+}
+
+.voltmeter {
+  fill: #fffdf4;
+}
+
+.meter-value {
+  fill: #1f2b2a;
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.meter-value.left {
+  text-anchor: start;
+}
+
+.bulb-glow {
+  fill: #e9c46a;
+}
+
+.bulb {
+  fill: #fff4bd;
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.ohm-axis {
+  stroke-width: 2;
+}
+
+.ohm-line {
+  stroke: #537d5d;
+  stroke-width: 5;
 }
 
 .active-dot,
@@ -688,6 +774,17 @@ input[type="range"] {
   stroke-linejoin: round;
 }
 
+.trajectory.guide {
+  opacity: 0.28;
+  stroke-dasharray: 6 8;
+}
+
+.trajectory.active-trail {
+  stroke: #b95747;
+  opacity: 1;
+  stroke-dasharray: none;
+}
+
 .projectile {
   fill: #b95747;
   stroke: #1f2b2a;
@@ -777,6 +874,116 @@ input[type="range"] {
   fill: #e9c46a;
   stroke: #b08d45;
   stroke-width: 4;
+}
+
+.spring-coil {
+  fill: none;
+  stroke: #427aa1;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.mass-block {
+  fill: #b08d45;
+  stroke: #1f2b2a;
+  stroke-width: 3;
+}
+
+.measurement-line {
+  stroke: #b95747;
+  stroke-width: 3;
+  stroke-dasharray: 4 7;
+}
+
+.speaker {
+  fill: #ece2cb;
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.speaker-cone {
+  fill: #427aa1;
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.sound-wave {
+  fill: none;
+  stroke: #b95747;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sound-ring {
+  fill: none;
+  stroke: #427aa1;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+.sound-ring.wide {
+  opacity: 0.35;
+}
+
+.electrolyzer {
+  fill: rgba(255, 255, 255, 0.54);
+  stroke: #394946;
+  stroke-width: 3;
+}
+
+.electrolyte {
+  fill: #8fb9d5;
+  opacity: 0.5;
+}
+
+.electrode {
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.electrode.cathode {
+  stroke: #427aa1;
+}
+
+.electrode.anode {
+  stroke: #b95747;
+}
+
+.crystal {
+  fill: #b08d45;
+  stroke: #8f7032;
+  stroke-width: 2;
+}
+
+.enzyme-body {
+  fill: rgba(83, 125, 93, 0.3);
+  stroke: #537d5d;
+  stroke-width: 4;
+}
+
+.active-site {
+  fill: rgba(233, 196, 106, 0.35);
+  stroke: #b08d45;
+  stroke-width: 3;
+}
+
+.substrate-dot {
+  fill: #427aa1;
+  opacity: 0.75;
+}
+
+.substrate-dot.hot {
+  fill: #b95747;
+}
+
+.population-line {
+  stroke: #537d5d;
+}
+
+.population-dot {
+  fill: #427aa1;
 }
 
 .leaf {

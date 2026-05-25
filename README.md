@@ -1,18 +1,18 @@
 # 理科实验可视化仿真 / Science Lab Sim
 
-面向初高中课堂与自学场景的理科实验可视化仿真 Web 应用。当前版本覆盖物理、化学、生物 12 个入门实验，支持实验检索、学科筛选、参数调节、实时读数与可视化演示。
+面向初高中课堂与自学场景的理科实验可视化仿真 Web 应用。当前版本覆盖物理、化学、生物 18 个入门实验，支持实验检索、学科筛选、参数调节、实时读数与可视化演示。
 
-A browser-based science simulation app for middle and high school learning. The current version includes twelve introductory physics, chemistry, and biology experiments with experiment search, subject filters, adjustable parameters, live readings, and visual demonstrations.
+A browser-based science simulation app for middle and high school learning. The current version includes eighteen introductory physics, chemistry, and biology experiments with experiment search, subject filters, adjustable parameters, live readings, and visual demonstrations.
 
 ## 实验列表 / Experiments
 
-- 物理 / Physics: 单摆周期、欧姆定律、抛体运动、浮力与密度、凸透镜成像
-- 化学 / Chemistry: 酸碱中和滴定、反应速率、气体状态方程、纸层析分离
-- 生物 / Biology: 显微镜细胞观察、光合作用速率、孟德尔遗传方格
+- 物理 / Physics: 单摆周期、欧姆定律、抛体运动、浮力与密度、胡克定律、声波叠加、凸透镜成像
+- 化学 / Chemistry: 酸碱中和滴定、反应速率、气体状态方程、纸层析分离、电解水、溶解度与结晶
+- 生物 / Biology: 显微镜细胞观察、光合作用速率、孟德尔遗传方格、酶活性、种群增长
 
-- Physics: pendulum period, Ohm's law, projectile motion, buoyancy and density, convex lens imaging
-- Chemistry: acid-base titration, reaction rate, ideal gas law, paper chromatography
-- Biology: microscope cell observation, photosynthesis rate, Mendelian Punnett square
+- Physics: pendulum period, Ohm's law, projectile motion, buoyancy and density, Hooke's law, sound wave superposition, convex lens imaging
+- Chemistry: acid-base titration, reaction rate, ideal gas law, paper chromatography, water electrolysis, solubility and crystallization
+- Biology: microscope cell observation, photosynthesis rate, Mendelian Punnett square, enzyme activity, population growth
 
 ## 功能亮点 / Highlights
 
