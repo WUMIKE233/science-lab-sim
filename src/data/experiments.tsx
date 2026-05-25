@@ -243,6 +243,218 @@ function CellVisual({ params }: VisualProps) {
   );
 }
 
+function ProjectileVisual({ params, time, result }: VisualProps) {
+  const speed = asNumber(params, "speed");
+  const angle = (asNumber(params, "angle") * Math.PI) / 180;
+  const gravity = asNumber(params, "gravity");
+  const flightTime = (2 * speed * Math.sin(angle)) / gravity;
+  const range = speed * Math.cos(angle) * flightTime;
+  const t = flightTime > 0 ? time % flightTime : 0;
+  const x = speed * Math.cos(angle) * t;
+  const y = speed * Math.sin(angle) * t - 0.5 * gravity * t * t;
+  const points = Array.from({ length: 44 }, (_, index) => {
+    const pointTime = (index / 43) * flightTime;
+    return {
+      x: speed * Math.cos(angle) * pointTime,
+      y: Math.max(0, speed * Math.sin(angle) * pointTime - 0.5 * gravity * pointTime * pointTime),
+    };
+  });
+  const maxHeight = Math.max(...points.map((point) => point.y), 1);
+  const ballX = 48 + (x / Math.max(range, 1)) * 344;
+  const ballY = 292 - (Math.max(y, 0) / maxHeight) * 210;
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="抛体运动轨迹">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <path className="axis" d="M48 292 H398 M48 292 V68" />
+      <path className="trajectory" d={curvePath(points, 392, 316, 48)} />
+      <line className="launch-vector" x1="48" y1="292" x2={48 + Math.cos(angle) * 72} y2={292 - Math.sin(angle) * 72} />
+      <circle className="projectile" cx={ballX} cy={ballY} r="12" />
+      <text className="svg-label" x="58" y="326">{result.readings[0].value}</text>
+      <text className="svg-label" x="278" y="326">H = {result.readings[2].value}</text>
+    </svg>
+  );
+}
+
+function BuoyancyVisual({ params, result }: VisualProps) {
+  const objectDensity = asNumber(params, "objectDensity");
+  const fluid = asString(params, "fluid");
+  const volume = asNumber(params, "volume");
+  const fluidDensity = fluid === "salt" ? 1030 : fluid === "oil" ? 900 : 1000;
+  const floats = objectDensity < fluidDensity;
+  const sinkDepth = floats ? clamp(objectDensity / fluidDensity, 0.16, 0.92) : 1;
+  const blockY = floats ? 104 + sinkDepth * 98 : 226;
+  const blockHeight = clamp(44 + volume * 12, 46, 92);
+  const waterColor = fluid === "oil" ? "#d7ba62" : fluid === "salt" ? "#91c7d6" : "#8fb9d5";
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="浮力与沉浮状态">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <rect className="tank" x="78" y="70" width="220" height="224" rx="8" />
+      <rect className="fluid" x="86" y="124" width="204" height="162" fill={waterColor} />
+      <line className="surface-wave" x1="86" y1="124" x2="290" y2="124" />
+      <rect className="floating-block" x="160" y={blockY} width="64" height={blockHeight} rx="6" />
+      <line className="force up" x1="318" y1="254" x2="318" y2="164" />
+      <line className="force down" x1="354" y1="144" x2="354" y2="234" />
+      <text className="svg-label" x="306" y="132">G</text>
+      <text className="svg-label" x="306" y="276">F浮</text>
+      <text className="svg-label" x="72" y="328">{result.readings[2].value}</text>
+    </svg>
+  );
+}
+
+function GasLawVisual({ params, result }: VisualProps) {
+  const temperature = asNumber(params, "temperature");
+  const moles = asNumber(params, "moles");
+  const pistonLoad = asNumber(params, "pistonLoad");
+  const pressure = 85 + pistonLoad * 35;
+  const volume = (moles * 8.314 * (temperature + 273.15)) / pressure;
+  const pistonY = clamp(270 - volume * 1.15, 88, 248);
+  const molecules = Array.from({ length: 18 }, (_, index) => {
+    const usableHeight = Math.max(34, 270 - pistonY - 20);
+    return {
+      x: 116 + ((index * 31 + Math.floor(temperature)) % 150),
+      y: pistonY + 18 + ((index * 43 + Math.floor(moles * 20)) % usableHeight),
+      hot: temperature > 55 && index % 3 === 0,
+    };
+  });
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="气体状态方程活塞模型">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <rect className="cylinder" x="92" y="58" width="196" height="232" rx="10" />
+      <rect className="piston" x="100" y={pistonY} width="180" height="18" rx="5" />
+      <rect className="weight" x="142" y={pistonY - 38} width="96" height="30" rx="6" />
+      {molecules.map((molecule, index) => (
+        <circle key={index} className={molecule.hot ? "gas-dot hot" : "gas-dot"} cx={molecule.x} cy={molecule.y} r="5" />
+      ))}
+      <path className="thermometer" d="M336 94 V250" />
+      <circle className="thermo-bulb" cx="336" cy="268" r="18" />
+      <rect className="thermo-fill" x="331" y={250 - clamp((temperature / 100) * 138, 10, 138)} width="10" height={clamp((temperature / 100) * 138, 10, 138)} rx="5" />
+      <text className="svg-label" x="74" y="326">{result.readings[0].value}</text>
+      <text className="svg-label" x="270" y="326">{result.readings[1].value}</text>
+    </svg>
+  );
+}
+
+function ChromatographyVisual({ params, result }: VisualProps) {
+  const solventHeight = asNumber(params, "solventHeight");
+  const sample = asString(params, "sample");
+  const polarity = asNumber(params, "polarity");
+  const solventY = 292 - solventHeight * 2.4;
+  const components = sample === "ink"
+    ? [
+        { color: "#427aa1", rf: 0.28 + polarity * 0.08 },
+        { color: "#6d508f", rf: 0.48 + polarity * 0.05 },
+        { color: "#b95747", rf: 0.68 - polarity * 0.04 },
+      ]
+    : [
+        { color: "#537d5d", rf: 0.32 + polarity * 0.06 },
+        { color: "#b08d45", rf: 0.55 + polarity * 0.05 },
+        { color: "#d7ba62", rf: 0.76 - polarity * 0.03 },
+      ];
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="纸层析分离">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <rect className="beaker" x="88" y="52" width="264" height="256" rx="10" />
+      <rect className="solvent" x="98" y={solventY} width="244" height={292 - solventY} />
+      <rect className="paper-strip" x="184" y="44" width="72" height="244" rx="4" />
+      <line className="baseline" x1="184" y1="250" x2="256" y2="250" />
+      <line className="solvent-front" x1="184" y1={solventY} x2="256" y2={solventY} />
+      {components.map((component, index) => (
+        <ellipse
+          key={component.color}
+          className="chromato-spot"
+          cx={220 + (index - 1) * 16}
+          cy={250 - component.rf * (250 - solventY)}
+          rx="13"
+          ry="8"
+          fill={component.color}
+        />
+      ))}
+      <text className="svg-label" x="62" y="328">{sample === "ink" ? "墨水样品" : "叶绿素样品"}</text>
+      <text className="svg-label" x="266" y="328">{result.readings[0].value}</text>
+    </svg>
+  );
+}
+
+function PhotosynthesisVisual({ params, result }: VisualProps) {
+  const light = asNumber(params, "light");
+  const co2 = asNumber(params, "co2");
+  const temperature = asNumber(params, "temperature");
+  const rate = Number(result.readings[0].value.replace("%", ""));
+  const bubbles = Array.from({ length: 12 }, (_, index) => {
+    const phase = (index * 23 + light) % 100;
+    return {
+      x: 250 + ((index * 31) % 76),
+      y: 248 - phase * 1.55,
+      r: 4 + (index % 3),
+    };
+  });
+  const curve = Array.from({ length: 36 }, (_, index) => {
+    const x = index;
+    const simulatedLight = (index / 35) * 100;
+    const y = Math.min(100, simulatedLight * 1.15) * (co2 / 100) * Math.exp(-Math.pow((temperature - 28) / 24, 2));
+    return { x, y };
+  });
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="光合作用速率">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <circle className="sun" cx="96" cy="82" r={22 + light * 0.08} />
+      <path className="leaf" d="M118 234 C152 130 234 110 294 172 C250 260 170 280 118 234 Z" />
+      <path className="leaf-vein" d="M130 232 C178 200 220 176 292 172" />
+      {bubbles.map((bubble, index) => (
+        <circle key={index} className="oxygen-bubble" cx={bubble.x} cy={bubble.y} r={bubble.r} opacity={clamp(rate / 100, 0.2, 1)} />
+      ))}
+      <path className="axis" d="M68 306 H202 M68 306 V210" />
+      <path className="chart-line" d={curvePath(curve, 220, 326, 28)} transform="translate(34, 20) scale(.64, .42)" />
+      <text className="svg-label" x="52" y="328">速率 {result.readings[0].value}</text>
+      <text className="svg-label" x="272" y="328">CO₂ {co2}%</text>
+    </svg>
+  );
+}
+
+function GeneticsVisual({ params, result }: VisualProps) {
+  const parentA = asString(params, "parentA");
+  const parentB = asString(params, "parentB");
+  const gametes = (genotype: string) => genotype === "AA" ? ["A", "A"] : genotype === "aa" ? ["a", "a"] : ["A", "a"];
+  const a = gametes(parentA);
+  const b = gametes(parentB);
+  const cells = [
+    [a[0] + b[0], a[0] + b[1]],
+    [a[1] + b[0], a[1] + b[1]],
+  ].map((row) => row.map((cell) => cell.split("").sort().reverse().join("")));
+
+  return (
+    <svg className="simulation-svg" viewBox="0 0 440 360" role="img" aria-label="孟德尔遗传方格">
+      <rect className="svg-grid" x="24" y="24" width="392" height="312" rx="6" />
+      <text className="svg-label" x="80" y="70">亲本：{parentA} × {parentB}</text>
+      <g transform="translate(114 96)">
+        <rect className="punnett-head" x="76" y="0" width="76" height="52" rx="6" />
+        <rect className="punnett-head" x="152" y="0" width="76" height="52" rx="6" />
+        <rect className="punnett-head" x="0" y="52" width="76" height="76" rx="6" />
+        <rect className="punnett-head" x="0" y="128" width="76" height="76" rx="6" />
+        <text className="punnett-text" x="114" y="33">{b[0]}</text>
+        <text className="punnett-text" x="190" y="33">{b[1]}</text>
+        <text className="punnett-text" x="38" y="98">{a[0]}</text>
+        <text className="punnett-text" x="38" y="174">{a[1]}</text>
+        {cells.flatMap((row, rowIndex) =>
+          row.map((cell, colIndex) => (
+            <g key={`${rowIndex}-${colIndex}`}>
+              <rect className={cell === "aa" ? "punnett-cell recessive" : "punnett-cell"} x={76 + colIndex * 76} y={52 + rowIndex * 76} width="76" height="76" rx="6" />
+              <text className="punnett-text" x={114 + colIndex * 76} y={100 + rowIndex * 76}>{cell}</text>
+            </g>
+          )),
+        )}
+      </g>
+      <text className="svg-label" x="62" y="328">{result.readings[0].value}</text>
+      <text className="svg-label" x="264" y="328">{result.readings[1].value}</text>
+    </svg>
+  );
+}
+
 export const experiments: ExperimentModule[] = [
   {
     id: "pendulum",
@@ -305,6 +517,74 @@ export const experiments: ExperimentModule[] = [
       };
     },
     render: (props) => <OhmVisual {...props} />,
+  },
+  {
+    id: "projectile",
+    title: "抛体运动",
+    subject: "物理",
+    summary: "调节初速度、发射角和重力加速度，观察轨迹、射程和最大高度。",
+    defaults: { speed: 22, angle: 42, gravity: 9.8 },
+    controls: [
+      { type: "slider", key: "speed", label: "初速度", unit: "m/s", min: 8, max: 40, step: 1 },
+      { type: "slider", key: "angle", label: "发射角", unit: "°", min: 10, max: 80, step: 1 },
+      { type: "slider", key: "gravity", label: "重力加速度", unit: "m/s²", min: 1.6, max: 12, step: 0.1 },
+    ],
+    simulate: (params) => {
+      const speed = asNumber(params, "speed");
+      const angle = (asNumber(params, "angle") * Math.PI) / 180;
+      const gravity = asNumber(params, "gravity");
+      const flightTime = (2 * speed * Math.sin(angle)) / gravity;
+      const range = speed * Math.cos(angle) * flightTime;
+      const maxHeight = (speed * speed * Math.sin(angle) * Math.sin(angle)) / (2 * gravity);
+      return {
+        readings: [
+          { label: "射程", value: `${round(range, 1)} m`, tone: "good" },
+          { label: "飞行时间", value: `${round(flightTime, 2)} s` },
+          { label: "最大高度", value: `${round(maxHeight, 1)} m` },
+        ],
+        status: asNumber(params, "angle") > 45 ? "角度增大时最大高度提高，但水平分速度会减小。" : "接近 45° 时，在同一高度发射可获得较大射程。",
+      };
+    },
+    render: (props) => <ProjectileVisual {...props} />,
+  },
+  {
+    id: "buoyancy",
+    title: "浮力与密度",
+    subject: "物理",
+    summary: "改变物体密度、体积和液体类型，判断物体上浮、悬浮或下沉。",
+    defaults: { objectDensity: 760, volume: 3, fluid: "water" },
+    controls: [
+      { type: "slider", key: "objectDensity", label: "物体密度", unit: "kg/m³", min: 200, max: 1600, step: 20 },
+      { type: "slider", key: "volume", label: "体积", unit: "L", min: 1, max: 8, step: 0.5 },
+      {
+        type: "select",
+        key: "fluid",
+        label: "液体",
+        options: [
+          { label: "水", value: "water" },
+          { label: "盐水", value: "salt" },
+          { label: "食用油", value: "oil" },
+        ],
+      },
+    ],
+    simulate: (params) => {
+      const objectDensity = asNumber(params, "objectDensity");
+      const volume = asNumber(params, "volume") / 1000;
+      const fluid = asString(params, "fluid");
+      const fluidDensity = fluid === "salt" ? 1030 : fluid === "oil" ? 900 : 1000;
+      const buoyantForce = fluidDensity * 9.8 * volume;
+      const weight = objectDensity * 9.8 * volume;
+      const state = Math.abs(objectDensity - fluidDensity) < 30 ? "近似悬浮" : objectDensity < fluidDensity ? "上浮" : "下沉";
+      return {
+        readings: [
+          { label: "浮力", value: `${round(buoyantForce, 1)} N`, tone: state === "上浮" ? "good" : "info" },
+          { label: "重力", value: `${round(weight, 1)} N` },
+          { label: "状态", value: state, tone: state === "下沉" ? "warn" : "good" },
+        ],
+        status: objectDensity < fluidDensity ? "物体密度小于液体密度，最终会漂浮。" : "物体密度大于液体密度时，重力超过可获得的浮力。",
+      };
+    },
+    render: (props) => <BuoyancyVisual {...props} />,
   },
   {
     id: "lens",
@@ -406,6 +686,67 @@ export const experiments: ExperimentModule[] = [
     render: (props) => <ReactionVisual {...props} />,
   },
   {
+    id: "gas-law",
+    title: "气体状态方程",
+    subject: "化学",
+    summary: "用活塞模型观察温度、物质的量和外压如何影响气体体积。",
+    defaults: { temperature: 35, moles: 1.2, pistonLoad: 2 },
+    controls: [
+      { type: "slider", key: "temperature", label: "温度", unit: "°C", min: 0, max: 100, step: 1 },
+      { type: "slider", key: "moles", label: "物质的量", unit: "mol", min: 0.5, max: 2.5, step: 0.1 },
+      { type: "slider", key: "pistonLoad", label: "活塞负载", unit: "级", min: 0, max: 5, step: 0.5 },
+    ],
+    simulate: (params) => {
+      const temperature = asNumber(params, "temperature") + 273.15;
+      const moles = asNumber(params, "moles");
+      const pressure = 85 + asNumber(params, "pistonLoad") * 35;
+      const volume = (moles * 8.314 * temperature) / pressure;
+      return {
+        readings: [
+          { label: "体积", value: `${round(volume, 1)} L`, tone: "good" },
+          { label: "压强", value: `${round(pressure, 0)} kPa` },
+          { label: "关系", value: "PV = nRT" },
+        ],
+        status: "温度或物质的量升高会使气体体积增大，外压增大会压缩气体。",
+      };
+    },
+    render: (props) => <GasLawVisual {...props} />,
+  },
+  {
+    id: "chromatography",
+    title: "纸层析分离",
+    subject: "化学",
+    summary: "观察不同样品在溶剂前沿推动下的分离效果和 Rf 值。",
+    defaults: { solventHeight: 58, sample: "ink", polarity: 0.5 },
+    controls: [
+      { type: "slider", key: "solventHeight", label: "溶剂前沿", unit: "mm", min: 20, max: 90, step: 1 },
+      {
+        type: "select",
+        key: "sample",
+        label: "样品",
+        options: [
+          { label: "彩色墨水", value: "ink" },
+          { label: "叶绿素提取液", value: "leaf" },
+        ],
+      },
+      { type: "slider", key: "polarity", label: "溶剂极性", min: 0, max: 1, step: 0.05 },
+    ],
+    simulate: (params) => {
+      const solventHeight = asNumber(params, "solventHeight");
+      const polarity = asNumber(params, "polarity");
+      const mainRf = clamp(0.34 + polarity * 0.32, 0.2, 0.86);
+      return {
+        readings: [
+          { label: "主斑点 Rf", value: round(mainRf, 2), tone: "good" },
+          { label: "前沿距离", value: `${round(solventHeight, 0)} mm` },
+          { label: "分离度", value: polarity > 0.35 && polarity < 0.8 ? "较好" : "一般" },
+        ],
+        status: "组分在固定相和流动相中的分配不同，因此移动距离不同。",
+      };
+    },
+    render: (props) => <ChromatographyVisual {...props} />,
+  },
+  {
     id: "microscope",
     title: "显微镜细胞观察",
     subject: "生物",
@@ -438,5 +779,89 @@ export const experiments: ExperimentModule[] = [
       };
     },
     render: (props) => <CellVisual {...props} />,
+  },
+  {
+    id: "photosynthesis",
+    title: "光合作用速率",
+    subject: "生物",
+    summary: "调节光照、二氧化碳和温度，观察限制因素如何改变产氧速率。",
+    defaults: { light: 65, co2: 70, temperature: 28 },
+    controls: [
+      { type: "slider", key: "light", label: "光照强度", unit: "%", min: 0, max: 100, step: 1 },
+      { type: "slider", key: "co2", label: "CO₂ 浓度", unit: "%", min: 10, max: 100, step: 1 },
+      { type: "slider", key: "temperature", label: "温度", unit: "°C", min: 5, max: 45, step: 1 },
+    ],
+    simulate: (params) => {
+      const light = asNumber(params, "light");
+      const co2 = asNumber(params, "co2");
+      const temperature = asNumber(params, "temperature");
+      const tempFactor = Math.exp(-Math.pow((temperature - 28) / 16, 2));
+      const rate = clamp(Math.min(light * 1.18, 100) * (co2 / 100) * tempFactor, 0, 100);
+      const limiting = light < 35 ? "光照" : co2 < 40 ? "CO₂" : temperature < 15 || temperature > 38 ? "温度" : "综合条件";
+      return {
+        readings: [
+          { label: "相对速率", value: `${round(rate, 0)}%`, tone: rate > 55 ? "good" : "warn" },
+          { label: "限制因素", value: limiting },
+          { label: "适宜温度", value: "约 28°C" },
+        ],
+        status: `当前主要受${limiting}影响。光合作用常由最低效的条件限制。`,
+      };
+    },
+    render: (props) => <PhotosynthesisVisual {...props} />,
+  },
+  {
+    id: "genetics",
+    title: "孟德尔遗传方格",
+    subject: "生物",
+    summary: "选择亲本基因型，观察子代基因型和显性性状比例。",
+    defaults: { parentA: "Aa", parentB: "Aa", trait: "round" },
+    controls: [
+      {
+        type: "select",
+        key: "parentA",
+        label: "亲本 A",
+        options: [
+          { label: "AA 显性纯合", value: "AA" },
+          { label: "Aa 杂合", value: "Aa" },
+          { label: "aa 隐性纯合", value: "aa" },
+        ],
+      },
+      {
+        type: "select",
+        key: "parentB",
+        label: "亲本 B",
+        options: [
+          { label: "AA 显性纯合", value: "AA" },
+          { label: "Aa 杂合", value: "Aa" },
+          { label: "aa 隐性纯合", value: "aa" },
+        ],
+      },
+      {
+        type: "select",
+        key: "trait",
+        label: "性状",
+        options: [
+          { label: "豌豆圆粒", value: "round" },
+          { label: "高茎", value: "tall" },
+        ],
+      },
+    ],
+    simulate: (params) => {
+      const gametes = (genotype: string) => genotype === "AA" ? ["A", "A"] : genotype === "aa" ? ["a", "a"] : ["A", "a"];
+      const a = gametes(asString(params, "parentA"));
+      const b = gametes(asString(params, "parentB"));
+      const children = [a[0] + b[0], a[0] + b[1], a[1] + b[0], a[1] + b[1]].map((child) => child.split("").sort().reverse().join(""));
+      const dominant = children.filter((child) => child !== "aa").length;
+      const recessive = children.length - dominant;
+      return {
+        readings: [
+          { label: "显性比例", value: `${dominant}/4`, tone: dominant >= 3 ? "good" : "info" },
+          { label: "隐性比例", value: `${recessive}/4` },
+          { label: "基因型", value: Array.from(new Set(children)).join(" / ") },
+        ],
+        status: "每个亲本各提供一个等位基因，组合结果决定子代基因型和表现型。",
+      };
+    },
+    render: (props) => <GeneticsVisual {...props} />,
   },
 ];
