@@ -86,6 +86,76 @@ button {
   text-transform: uppercase;
 }
 
+.library-tools {
+  display: grid;
+  gap: 12px;
+}
+
+.search-box {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  color: #bdd3c8;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+}
+
+.search-box input {
+  width: 100%;
+  min-width: 0;
+  color: #f7f7ee;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.search-box input::placeholder {
+  color: #9fb8ad;
+}
+
+.filter-strip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 34px;
+  padding: 6px 9px;
+  color: #dbe9e1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+}
+
+.filter-chip.active {
+  color: #1f2b2a;
+  background: #e9c46a;
+  border-color: #e9c46a;
+}
+
+.filter-chip span {
+  display: grid;
+  min-width: 22px;
+  min-height: 22px;
+  place-items: center;
+  font-size: 0.78rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.filter-chip.active span {
+  background: rgba(31, 43, 42, 0.12);
+}
+
 h1,
 h2,
 h3,
@@ -147,6 +217,22 @@ h1 {
   font-size: 0.78rem;
 }
 
+.empty-state {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  align-items: center;
+  min-height: 58px;
+  padding: 12px;
+  color: #bdd3c8;
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
 .subject-icon {
   display: grid;
   width: 34px;
@@ -206,11 +292,28 @@ h1 {
   letter-spacing: 0;
 }
 
-.stage-header p:last-child {
+.experiment-summary {
   max-width: 680px;
   margin-bottom: 0;
   color: var(--muted);
   line-height: 1.7;
+}
+
+.stage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.stage-meta span {
+  min-height: 28px;
+  padding: 5px 10px;
+  color: #3c4c48;
+  background: rgba(251, 252, 248, 0.88);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 0.86rem;
 }
 
 .stage-actions {
@@ -396,6 +499,24 @@ input[type="range"] {
 
 .status-strip p {
   margin: 0;
+  line-height: 1.55;
+}
+
+.teaching-card {
+  display: grid;
+  gap: 10px;
+  padding: 13px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.teaching-card ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 21px;
+  color: var(--muted);
   line-height: 1.55;
 }
 
@@ -721,6 +842,15 @@ input[type="range"] {
     padding-bottom: 2px;
   }
 
+  .library-tools {
+    grid-template-columns: minmax(220px, 1fr) minmax(300px, 1.2fr);
+    align-items: center;
+  }
+
+  .filter-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .experiment-tab {
     min-height: 56px;
   }
@@ -767,5 +897,13 @@ input[type="range"] {
 
   .experiment-list {
     grid-auto-columns: 220px;
+  }
+
+  .library-tools {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

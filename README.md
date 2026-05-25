@@ -1,8 +1,8 @@
 # 理科实验可视化仿真 / Science Lab Sim
 
-面向初高中课堂与自学场景的理科实验可视化仿真 Web 应用。当前版本覆盖物理、化学、生物 12 个入门实验，支持参数调节、实时读数与可视化演示。
+面向初高中课堂与自学场景的理科实验可视化仿真 Web 应用。当前版本覆盖物理、化学、生物 12 个入门实验，支持实验检索、学科筛选、参数调节、实时读数与可视化演示。
 
-A browser-based science simulation app for middle and high school learning. The current version includes twelve introductory physics, chemistry, and biology experiments with adjustable parameters, live readings, and visual demonstrations.
+A browser-based science simulation app for middle and high school learning. The current version includes twelve introductory physics, chemistry, and biology experiments with experiment search, subject filters, adjustable parameters, live readings, and visual demonstrations.
 
 ## 实验列表 / Experiments
 
@@ -13,6 +13,18 @@ A browser-based science simulation app for middle and high school learning. The 
 - Physics: pendulum period, Ohm's law, projectile motion, buoyancy and density, convex lens imaging
 - Chemistry: acid-base titration, reaction rate, ideal gas law, paper chromatography
 - Biology: microscope cell observation, photosynthesis rate, Mendelian Punnett square
+
+## 功能亮点 / Highlights
+
+- 实验库搜索：按实验名称、学科、简介或参数快速定位实验。
+- 学科筛选：按物理、化学、生物查看实验数量和列表。
+- 课堂观察建议：每个实验都会给出基础观察步骤，便于课堂演示。
+- 响应式布局：桌面端提供可滚动实验导航，移动端支持横向浏览实验卡片。
+
+- Experiment search: find labs by title, subject, summary, or parameter names.
+- Subject filters: browse physics, chemistry, and biology labs with live counts.
+- Teaching hints: each lab includes a simple observation flow for classroom use.
+- Responsive layout: scrollable desktop navigation and mobile-friendly experiment cards.
 
 ## 技术栈 / Tech Stack
 

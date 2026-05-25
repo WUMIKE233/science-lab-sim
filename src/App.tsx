@@ -1,16 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Atom,
   Beaker,
   BookOpenCheck,
   ChartSpline,
   ChevronRight,
+  ListFilter,
   Microscope,
   Pause,
   Play,
   RotateCcw,
+  Search,
   SlidersHorizontal,
   Sparkles,
+  Target,
 } from "lucide-react";
 import { experiments } from "./data/experiments";
 import type { ControlConfig, ExperimentModule, ExperimentParams, Subject } from "./types";
@@ -27,12 +30,15 @@ const subjectClass: Record<Subject, string> = {
   生物: "subject-biology",
 };
 
+const subjectFilters: Array<Subject | "全部"> = ["全部", "物理", "化学", "生物"];
+
 function formatControlValue(value: ExperimentParams[string], unit?: string) {
   return `${value}${unit ? ` ${unit}` : ""}`;
 }
 
 function useClock(running: boolean) {
   const [time, setTime] = useState(0);
+  const resetTime = useCallback(() => setTime(0), []);
 
   useEffect(() => {
     if (!running) return undefined;
@@ -48,7 +54,7 @@ function useClock(running: boolean) {
     return () => cancelAnimationFrame(frame);
   }, [running]);
 
-  return { time, resetTime: () => setTime(0) };
+  return { time, resetTime };
 }
 
 function createInitialParams(experiment: ExperimentModule) {
@@ -57,17 +63,51 @@ function createInitialParams(experiment: ExperimentModule) {
 
 function App() {
   const [activeId, setActiveId] = useState(experiments[0].id);
+  const [subjectFilter, setSubjectFilter] = useState<Subject | "全部">("全部");
+  const [searchTerm, setSearchTerm] = useState("");
   const [paramsByExperiment, setParamsByExperiment] = useState<Record<string, ExperimentParams>>(() =>
     Object.fromEntries(experiments.map((experiment) => [experiment.id, createInitialParams(experiment)])),
   );
   const [running, setRunning] = useState(true);
   const { time, resetTime } = useClock(running);
+  const subjectCounts = useMemo(
+    () =>
+      experiments.reduce<Record<Subject, number>>(
+        (counts, experiment) => ({
+          ...counts,
+          [experiment.subject]: counts[experiment.subject] + 1,
+        }),
+        { 物理: 0, 化学: 0, 生物: 0 },
+      ),
+    [],
+  );
+  const filteredExperiments = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+    return experiments.filter((experiment) => {
+      const subjectMatches = subjectFilter === "全部" || experiment.subject === subjectFilter;
+      const text = [
+        experiment.title,
+        experiment.subject,
+        experiment.summary,
+        ...experiment.controls.map((control) => control.label),
+      ].join(" ").toLowerCase();
+      return subjectMatches && (!keyword || text.includes(keyword));
+    });
+  }, [searchTerm, subjectFilter]);
   const activeExperiment = experiments.find((experiment) => experiment.id === activeId) ?? experiments[0];
   const activeParams = paramsByExperiment[activeExperiment.id] ?? activeExperiment.defaults;
+  const activeIndex = experiments.findIndex((experiment) => experiment.id === activeExperiment.id) + 1;
   const result = useMemo(
     () => activeExperiment.simulate(activeParams, time),
     [activeExperiment, activeParams, time],
   );
+
+  useEffect(() => {
+    if (filteredExperiments.length && !filteredExperiments.some((experiment) => experiment.id === activeId)) {
+      setActiveId(filteredExperiments[0].id);
+      resetTime();
+    }
+  }, [activeId, filteredExperiments, resetTime]);
 
   const setParam = (key: string, value: number | string | boolean) => {
     setParamsByExperiment((current) => ({
@@ -99,9 +139,34 @@ function App() {
             <h1>理科实验可视化仿真</h1>
           </div>
         </div>
+        <div className="library-tools" aria-label="实验检索">
+          <label className="search-box">
+            <Search size={16} />
+            <input
+              aria-label="搜索实验"
+              placeholder="搜索实验、参数或学科"
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+          </label>
+          <div className="filter-strip" aria-label="按学科筛选">
+            {subjectFilters.map((filter) => (
+              <button
+                className={filter === subjectFilter ? "filter-chip active" : "filter-chip"}
+                key={filter}
+                onClick={() => setSubjectFilter(filter)}
+                type="button"
+              >
+                {filter}
+                <span>{filter === "全部" ? experiments.length : subjectCounts[filter]}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         <nav className="experiment-list">
-          {experiments.map((experiment) => {
+          {filteredExperiments.map((experiment) => {
             const Icon = subjectIcons[experiment.subject];
             const selected = experiment.id === activeExperiment.id;
             return (
@@ -122,6 +187,12 @@ function App() {
               </button>
             );
           })}
+          {!filteredExperiments.length && (
+            <div className="empty-state">
+              <ListFilter size={18} />
+              <p>没有匹配的实验</p>
+            </div>
+          )}
         </nav>
       </aside>
 
@@ -130,7 +201,12 @@ function App() {
           <div>
             <p className={`subject-pill ${subjectClass[activeExperiment.subject]}`}>{activeExperiment.subject}</p>
             <h2 id="experiment-title">{activeExperiment.title}</h2>
-            <p>{activeExperiment.summary}</p>
+            <p className="experiment-summary">{activeExperiment.summary}</p>
+            <div className="stage-meta" aria-label="实验库统计">
+              <span>第 {activeIndex} / {experiments.length} 个实验</span>
+              <span>{activeExperiment.controls.length} 个可调参数</span>
+              <span>{result.readings.length} 项实时读数</span>
+            </div>
           </div>
           <div className="stage-actions">
             <button className="icon-button" onClick={() => setRunning((value) => !value)} type="button" title={running ? "暂停" : "播放"}>
@@ -183,6 +259,18 @@ function App() {
             <section className="status-strip">
               <BookOpenCheck size={18} />
               <p>{result.status}</p>
+            </section>
+
+            <section className="teaching-card" aria-label="课堂观察建议">
+              <div className="section-title">
+                <Target size={17} />
+                <h3>观察建议</h3>
+              </div>
+              <ol>
+                <li>先只调节「{activeExperiment.controls[0]?.label ?? "主要参数"}」，观察读数变化。</li>
+                <li>记录「{result.readings[0]?.label ?? "关键读数"}」的变化趋势。</li>
+                <li>重置后改变第二个参数，比较两次现象。</li>
+              </ol>
             </section>
           </aside>
         </div>
