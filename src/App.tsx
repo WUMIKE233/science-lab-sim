@@ -5,6 +5,7 @@ import {
   BookOpenCheck,
   ChartSpline,
   ChevronRight,
+  ClipboardList,
   ListFilter,
   Microscope,
   Pause,
@@ -14,6 +15,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Target,
+  Trash2,
 } from "lucide-react";
 import { experiments } from "./data/experiments";
 import type { ControlConfig, ExperimentModule, ExperimentParams, Subject } from "./types";
@@ -31,6 +33,15 @@ const subjectClass: Record<Subject, string> = {
 };
 
 const subjectFilters: Array<Subject | "全部"> = ["全部", "物理", "化学", "生物"];
+
+interface Snapshot {
+  id: string;
+  experimentId: string;
+  title: string;
+  subject: Subject;
+  elapsed: number;
+  readings: Array<{ label: string; value: string }>;
+}
 
 function formatControlValue(value: ExperimentParams[string], unit?: string) {
   return `${value}${unit ? ` ${unit}` : ""}`;
@@ -68,6 +79,7 @@ function App() {
   const [paramsByExperiment, setParamsByExperiment] = useState<Record<string, ExperimentParams>>(() =>
     Object.fromEntries(experiments.map((experiment) => [experiment.id, createInitialParams(experiment)])),
   );
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [running, setRunning] = useState(true);
   const { time, resetTime } = useClock(running);
   const subjectCounts = useMemo(
@@ -125,6 +137,18 @@ function App() {
       [activeExperiment.id]: createInitialParams(activeExperiment),
     }));
     resetTime();
+  };
+
+  const captureSnapshot = () => {
+    const snapshot: Snapshot = {
+      id: `${activeExperiment.id}-${Date.now()}`,
+      experimentId: activeExperiment.id,
+      title: activeExperiment.title,
+      subject: activeExperiment.subject,
+      elapsed: time,
+      readings: result.readings.map((reading) => ({ label: reading.label, value: reading.value })),
+    };
+    setSnapshots((current) => [snapshot, ...current].slice(0, 4));
   };
 
   return (
@@ -209,6 +233,9 @@ function App() {
             </div>
           </div>
           <div className="stage-actions">
+            <button className="icon-button" onClick={captureSnapshot} type="button" title="记录读数">
+              <ClipboardList size={18} />
+            </button>
             <button className="icon-button" onClick={() => setRunning((value) => !value)} type="button" title={running ? "暂停" : "播放"}>
               {running ? <Pause size={18} /> : <Play size={18} />}
             </button>
@@ -259,6 +286,40 @@ function App() {
             <section className="status-strip">
               <BookOpenCheck size={18} />
               <p>{result.status}</p>
+            </section>
+
+            <section className="snapshot-panel" aria-label="读数记录">
+              <div className="section-title">
+                <ClipboardList size={17} />
+                <h3>记录</h3>
+                {snapshots.length > 0 && (
+                  <button className="mini-icon-button" onClick={() => setSnapshots([])} type="button" title="清空记录">
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+              {snapshots.length === 0 ? (
+                <p className="snapshot-empty">暂无记录</p>
+              ) : (
+                <div className="snapshot-list">
+                  {snapshots.map((snapshot) => (
+                    <article className="snapshot-item" key={snapshot.id}>
+                      <div>
+                        <strong>{snapshot.title}</strong>
+                        <span>{snapshot.subject} · {snapshot.elapsed.toFixed(1)} s</span>
+                      </div>
+                      <dl>
+                        {snapshot.readings.slice(0, 3).map((reading) => (
+                          <div key={`${snapshot.id}-${reading.label}`}>
+                            <dt>{reading.label}</dt>
+                            <dd>{reading.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </article>
+                  ))}
+                </div>
+              )}
             </section>
 
             <section className="teaching-card" aria-label="课堂观察建议">
