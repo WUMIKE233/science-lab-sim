@@ -19,11 +19,13 @@ A browser-based science simulation app for middle and high school learning. The 
 - 实验库搜索：按实验名称、学科、简介或参数快速定位实验。
 - 学科筛选：按物理、化学、生物查看实验数量和列表。
 - 课堂观察建议：每个实验都会给出基础观察步骤，便于课堂演示。
+- 读数记录导出：可把课堂观察记录保存为 JSON，便于课后整理。
 - 响应式布局：桌面端提供可滚动实验导航，移动端支持横向浏览实验卡片。
 
 - Experiment search: find labs by title, subject, summary, or parameter names.
 - Subject filters: browse physics, chemistry, and biology labs with live counts.
 - Teaching hints: each lab includes a simple observation flow for classroom use.
+- Snapshot export: save classroom observation records as JSON for follow-up review.
 - Responsive layout: scrollable desktop navigation and mobile-friendly experiment cards.
 
 ## 技术栈 / Tech Stack

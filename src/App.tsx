@@ -6,6 +6,7 @@ import {
   ChartSpline,
   ChevronRight,
   ClipboardList,
+  Download,
   ListFilter,
   Microscope,
   Pause,
@@ -151,6 +152,21 @@ function App() {
     setSnapshots((current) => [snapshot, ...current].slice(0, 4));
   };
 
+  const downloadSnapshots = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      snapshotCount: snapshots.length,
+      snapshots,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "science-lab-snapshots.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <main className="app-shell">
       <aside className="lab-sidebar" aria-label="实验导航">
@@ -293,9 +309,14 @@ function App() {
                 <ClipboardList size={17} />
                 <h3>记录</h3>
                 {snapshots.length > 0 && (
-                  <button className="mini-icon-button" onClick={() => setSnapshots([])} type="button" title="清空记录">
-                    <Trash2 size={15} />
-                  </button>
+                  <div className="snapshot-actions">
+                    <button className="mini-icon-button" onClick={downloadSnapshots} type="button" title="导出记录">
+                      <Download size={15} />
+                    </button>
+                    <button className="mini-icon-button" onClick={() => setSnapshots([])} type="button" title="清空记录">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 )}
               </div>
               {snapshots.length === 0 ? (
